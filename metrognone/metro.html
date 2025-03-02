@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Next-Gen Metronome</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Next-Gen Metronome</h1>
+    
+    <!-- Basic Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <label for="bpm">BPM:</label>
+        <input type="number" id="bpm" min="30" max="300" value="120" />
+      </div>
+      <div class="control-group">
+        <label for="timeSignature">Time Signature (beats per measure):</label>
+        <input type="number" id="timeSignature" min="1" value="4" />
+      </div>
+      <div class="control-group">
+        <label for="primarySubdivision">Primary Subdivisions (per beat):</label>
+        <input type="number" id="primarySubdivision" min="1" value="1" />
+      </div>
+    </div>
+    
+    <!-- Primary Accent Settings -->
+    <div id="primaryAccentsContainer">
+      <p>Toggle accent for primary beats:</p>
+      <div id="primaryAccents" class="accent-buttons"></div>
+    </div>
+    
+    <!-- Polyrhythm Options -->
+    <div class="polyrhythm-options">
+      <h2>Polyrhythm Options</h2>
+      <div class="control-group">
+        <label for="enablePolyrhythm">
+          <input type="checkbox" id="enablePolyrhythm" />
+          Enable Polyrhythm
+        </label>
+      </div>
+      <div id="polySettings" style="display: none;">
+        <div class="control-group">
+          <label for="polyBeats">Polyrhythm Beats Per Measure:</label>
+          <input type="number" id="polyBeats" min="1" value="3" />
+        </div>
+        <div class="control-group">
+          <label for="polySubdivision">Polyrhythm Subdivisions (per beat):</label>
+          <input type="number" id="polySubdivision" min="1" value="1" />
+        </div>
+        <div id="polyAccentsContainer">
+          <p>Toggle accent for polyrhythm beats:</p>
+          <div id="polyAccents" class="accent-buttons"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Additional Features -->
+    <div class="additional-features">
+      <h2>Additional Features</h2>
+      <div class="feature">
+         <label for="swingMode">Swing Mode:</label>
+         <input type="checkbox" id="swingMode">
+         <label for="swingIntensity">Intensity:</label>
+         <input type="range" id="swingIntensity" min="0" max="100" value="50">
+      </div>
+      <div class="feature">
+         <label for="dynamicTempo">Dynamic Tempo Change:</label>
+         <input type="checkbox" id="dynamicTempo">
+         <label for="targetBPM">Target BPM:</label>
+         <input type="number" id="targetBPM" min="30" max="300" value="120">
+         <label for="tempoDuration">Duration (sec):</label>
+         <input type="number" id="tempoDuration" min="1" value="30">
+      </div>
+      <div class="feature">
+         <label for="soundOptions">Sound Options:</label>
+         <select id="soundOptions">
+             <option value="default">Default</option>
+             <option value="woodblock">Woodblock</option>
+             <option value="beep">Beep</option>
+             <option value="drum">Drum</option>
+         </select>
+      </div>
+      <div class="feature">
+         <label for="ledFlash">LED/Screen Flash:</label>
+         <input type="checkbox" id="ledFlash">
+      </div>
+      <div class="feature">
+         <label for="themeColor">Theme Color:</label>
+         <input type="color" id="themeColor" value="#007BFF">
+         <label for="accentColor">Accent Color:</label>
+         <input type="color" id="accentColor" value="#FFA500">
+      </div>
+      <div class="feature">
+         <label for="darkMode">Dark Mode:</label>
+         <input type="checkbox" id="darkMode">
+      </div>
+      <div class="feature">
+         <label for="trainerMode">Trainer Mode:</label>
+         <input type="checkbox" id="trainerMode">
+         <label for="trainerProbability">Mute Probability (%):</label>
+         <input type="range" id="trainerProbability" min="0" max="100" value="20">
+      </div>
+    </div>
+    
+    <!-- Tap Tempo and Start/Stop -->
+    <div class="tap-tempo">
+      <button id="tapButton">Tap Tempo</button>
+      <span id="tapDisplay">--</span>
+    </div>
+    <div class="metronome-controls">
+      <button id="startStopButton">Start</button>
+    </div>
+    
+    <!-- Visuals -->
+    <div id="visuals">
+      <div>
+        <h3>Primary Rhythm Visual</h3>
+        <div id="primaryVisual" class="visuals-container"></div>
+      </div>
+      <div id="polyVisualContainer" style="display: none;">
+        <h3>Polyrhythm Visual</h3>
+        <div id="polyVisual" class="visuals-container"></div>
+      </div>
+    </div>
+  </div>
+  <!-- LED/Screen Flash Overlay -->
+  <div id="flashOverlay"></div>
+  
+  <script src="metro.js"></script>
+</body>
+</html>

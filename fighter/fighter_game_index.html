@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Urban Clash: Retro Brawl</title>
+  <link rel="stylesheet" href="fighter_game_styles.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Main Game Canvas (1200x600 stage) -->
+    <canvas id="gameCanvas" width="1200" height="600"></canvas>
+    
+    <!-- In-Game UI Overlay (health bars and round counter) -->
+    <div id="ui-overlay">
+      <div id="health-bars">
+         <div id="player1-health" class="health-bar"></div>
+         <div id="player2-health" class="health-bar"></div>
+      </div>
+      <div id="round-counter">Round: 1</div>
+    </div>
+    
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="overlay">
+      <div class="overlay-content">
+         <h2>Tutorial</h2>
+         <p><strong>Player One (WASD User):</strong></p>
+         <ul>
+           <li>Movement: W (Jump), A (Left), D (Right), S (Crouch), Q (Dash)</li>
+           <li>Punches: T (Light), Y (Medium), U (Heavy)</li>
+           <li>Kicks: G (Light), H (Medium), J (Heavy)</li>
+           <li>Defense: B (Standing Block), N (Crouching Block), M (Throw/Grab)</li>
+         </ul>
+         <p><strong>Player Two (Arrow Keys User):</strong></p>
+         <ul>
+           <li>Movement: Up (Jump), Left/Right, Down (Crouch), 0 (Dash)</li>
+           <li>Punches: 7 (Light), 8 (Medium), 9 (Heavy)</li>
+           <li>Kicks: 4 (Light), 5 (Medium), 6 (Heavy)</li>
+           <li>Defense: 1 (Standing Block), 2 (Crouching Block), 3 (Throw/Grab)</li>
+         </ul>
+         <button id="tutorial-continue">Continue</button>
+      </div>
+    </div>
+    
+    <!-- Character Selection Overlay -->
+    <div id="selection-overlay" class="overlay">
+      <div class="overlay-content">
+         <h2>Character Selection</h2>
+         <div id="player1-selection">
+           <h3>Player One</h3>
+           <button class="character-button" data-character="blade">Blade</button>
+           <button class="character-button" data-character="striker">Striker</button>
+         </div>
+         <div id="player2-selection">
+           <h3>Player Two</h3>
+           <button class="character-button" data-character="blade">Blade</button>
+           <button class="character-button" data-character="striker">Striker</button>
+         </div>
+         <button id="start-game-button" disabled>Start Game</button>
+      </div>
+    </div>
+    
+  </div>
+  <script src="fighter_game.js"></script>
+</body>
+</html>

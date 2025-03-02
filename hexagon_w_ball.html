@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hexagon with Bouncing Balls</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: sans-serif;
+      position: relative;
+    }
+    canvas {
+      background: #ffffff;
+      border: 2px solid #333;
+      margin-top: 20px;
+    }
+    #energyDisplay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.8);
+      padding: 5px 10px;
+      border: 1px solid #333;
+      font-weight: bold;
+    }
+    #controls {
+      margin: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    button, input[type="range"] {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    label {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="energyDisplay">Total Energy: 0</div>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  
+  <div id="controls">
+    <button id="energyButton">Increase Energy x2</button>
+    <button id="addBallButton">Add Ball</button>
+    <label for="spinSlider">Hexagon Spin Speed:</label>
+    <input type="range" id="spinSlider" min="-0.1" max="0.1" step="0.001" value="0.01">
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const energyDisplay = document.getElementById("energyDisplay");
+    const energyButton = document.getElementById("energyButton");
+    const addBallButton = document.getElementById("addBallButton");
+    const spinSlider = document.getElementById("spinSlider");
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const hexRadius = 250; // distance from center to each vertex
+
+    // Create base vertices for a regular hexagon (flat sides horizontal)
+    let baseHexagonVertices = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.PI / 3 * i - Math.PI / 6; 
+      const x = centerX + hexRadius * Math.cos(angle);
+      const y = centerY + hexRadius * Math.sin(angle);
+      baseHexagonVertices.push({ x, y });
+    }
+
+    // Global hexagon rotation variables
+    let hexagonAngle = 0;
+    let hexSpinSpeed = parseFloat(spinSlider.value);
+
+    // Array to store multiple balls
+    let balls = [];
+
+    // Function to create a new ball object
+    function createBall() {
+      return {
+        x: centerX,
+        y: centerY - 100,
+        radius: 15,
+        // Random initial velocities between -2 and 2
+        vx: Math.random() * 4 - 2,
+        vy: Math.random() * 4 - 2,
+        mass: 1
+      };
+    }
+
+    // Start with one ball
+    balls.push(createBall());
+
+    // Physics constants
+    const gravity = 0.3;
+    const friction = 0.995; // air resistance factor
+
+    // Utility: get rotated vertices based on current hexagon angle
+    function getRotatedVertices(angle) {
+      return baseHexagonVertices.map(v => {
+        const dx = v.x - centerX;
+        const dy = v.y - centerY;
+        const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+        const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+        return { x: centerX + rx, y: centerY + ry };
+      });
+    }
+
+    // Function: draw hexagon using current rotated vertices
+    function drawHexagon(vertices) {
+      ctx.beginPath();
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      for (let i = 1; i < vertices.length; i++) {
+        ctx.lineTo(vertices[i].x, vertices[i].y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // Function: draw a ball
+    function drawBall(ball) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#007acc";
+      ctx.fill();
+      ctx.strokeStyle = "#003366";
+      ctx.stroke();
+    }
+
+    // Update physics and collisions for a single ball against hexagon walls
+    function updateBall(ball, rotatedVertices) {
+      // Apply gravity and friction
+      ball.vy += gravity;
+      ball.vx *= friction;
+      ball.vy *= friction;
+      
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // Collision detection with each edge of the rotated hexagon
+      for (let i = 0; i < rotatedVertices.length; i++) {
+        const a = rotatedVertices[i];
+        const b = rotatedVertices[(i + 1) % rotatedVertices.length];
+
+        // Find the closest point on the edge to the ball center
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const lengthSq = dx * dx + dy * dy;
+        const t = Math.max(0, Math.min(1, ((ball.x - a.x) * dx + (ball.y - a.y) * dy) / lengthSq));
+        const nearestX = a.x + t * dx;
+        const nearestY = a.y + t * dy;
+        const dist = Math.hypot(ball.x - nearestX, ball.y - nearestY);
+
+        if (dist < ball.radius) {
+          // Compute collision normal
+          let nx = ball.x - nearestX;
+          let ny = ball.y - nearestY;
+          const nLength = Math.hypot(nx, ny);
+          if (nLength !== 0) {
+            nx /= nLength;
+            ny /= nLength;
+          }
+
+          // Resolve overlap
+          const overlap = ball.radius - dist;
+          ball.x += nx * overlap;
+          ball.y += ny * overlap;
+
+          // Reflect velocity along the normal
+          const dot = ball.vx * nx + ball.vy * ny;
+          ball.vx = ball.vx - 2 * dot * nx;
+          ball.vy = ball.vy - 2 * dot * ny;
+
+          // Slight energy loss
+          ball.vx *= 0.98;
+          ball.vy *= 0.98;
+        }
+      }
+    }
+
+    // Resolve collision between two balls
+    function resolveBallCollision(ball1, ball2) {
+      const dx = ball2.x - ball1.x;
+      const dy = ball2.y - ball1.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = ball1.radius + ball2.radius;
+      
+      if (dist < minDist && dist !== 0) {
+        // Calculate overlap and unit collision normal (from ball1 to ball2)
+        const overlap = (minDist - dist) / 2;
+        const nx = dx / dist;
+        const ny = dy / dist;
+        
+        // Separate the balls to prevent sticking
+        ball1.x -= nx * overlap;
+        ball1.y -= ny * overlap;
+        ball2.x += nx * overlap;
+        ball2.y += ny * overlap;
+        
+        // Compute relative velocity in the normal direction
+        const dvx = ball1.vx - ball2.vx;
+        const dvy = ball1.vy - ball2.vy;
+        const dot = dvx * nx + dvy * ny;
+        
+        // Only resolve if balls are moving towards each other
+        if (dot > 0) {
+          // For equal mass, the impulse scalar is dot (based on elastic collision)
+          ball1.vx -= dot * nx;
+          ball1.vy -= dot * ny;
+          ball2.vx += dot * nx;
+          ball2.vy += dot * ny;
+        }
+      }
+    }
+
+    // Update and draw all balls (including ball-to-ball collisions)
+    function updateAndDrawBalls(rotatedVertices) {
+      // First, update each ball (apply gravity, friction, and hexagon collisions)
+      balls.forEach(ball => {
+        updateBall(ball, rotatedVertices);
+      });
+      
+      // Then, check and resolve collisions between balls
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          resolveBallCollision(balls[i], balls[j]);
+        }
+      }
+      
+      // Finally, draw balls and compute total kinetic energy
+      let totalEnergy = 0;
+      balls.forEach(ball => {
+        drawBall(ball);
+        totalEnergy += 0.5 * ball.mass * (ball.vx * ball.vx + ball.vy * ball.vy);
+      });
+      
+      energyDisplay.textContent = "Total Energy: " + totalEnergy.toFixed(2);
+    }
+
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Update hexagon rotation angle based on spin speed
+      hexagonAngle += hexSpinSpeed;
+      const rotatedVertices = getRotatedVertices(hexagonAngle);
+      
+      drawHexagon(rotatedVertices);
+      updateAndDrawBalls(rotatedVertices);
+      
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // Button: Increase energy for all balls by 2x (multiply velocity by √2)
+    energyButton.addEventListener("click", () => {
+      balls.forEach(ball => {
+        ball.vx *= Math.SQRT2;
+        ball.vy *= Math.SQRT2;
+      });
+    });
+
+    // Button: Add a new ball
+    addBallButton.addEventListener("click", () => {
+      balls.push(createBall());
+    });
+
+    // Slider: Adjust hexagon spin speed
+    spinSlider.addEventListener("input", () => {
+      hexSpinSpeed = parseFloat(spinSlider.value);
+    });
+  </script>
+</body>
+</html>

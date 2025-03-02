@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D Sphere with Bouncing Balls</title>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <!-- Include Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+    <script>
+      // Scene, Camera, Renderer setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 0, 120);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a transparent wireframe sphere as container
+      const containerRadius = 50;
+      const sphereGeometry = new THREE.SphereGeometry(containerRadius, 32, 32);
+      const sphereMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        opacity: 0.3,
+        transparent: true,
+      });
+      const containerMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      scene.add(containerMesh);
+
+      // Ball parameters
+      const ballCount = 100;
+      const ballRadius = 1.5;
+      const balls = []; // array to hold each ball's mesh, position, velocity
+
+      // Create ball geometry and material
+      const ballGeometry = new THREE.SphereGeometry(ballRadius, 16, 16);
+      const ballMaterial = new THREE.MeshPhongMaterial({ color: 0xff4500 });
+
+      // Helper function: returns a random number between min and max
+      function randBetween(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // Create balls with random positions and velocities (ensuring they are inside the container)
+      for (let i = 0; i < ballCount; i++) {
+        const ballMesh = new THREE.Mesh(ballGeometry, ballMaterial);
+        let pos;
+        // Ensure the ball starts fully inside the container
+        do {
+          pos = new THREE.Vector3(
+            randBetween(-containerRadius, containerRadius),
+            randBetween(-containerRadius, containerRadius),
+            randBetween(-containerRadius, containerRadius)
+          );
+        } while (pos.length() + ballRadius > containerRadius);
+
+        ballMesh.position.copy(pos);
+
+        // Random velocity vector
+        const velocity = new THREE.Vector3(
+          randBetween(-0.5, 0.5),
+          randBetween(-0.5, 0.5),
+          randBetween(-0.5, 0.5)
+        );
+
+        balls.push({ mesh: ballMesh, velocity: velocity });
+        scene.add(ballMesh);
+      }
+
+      // Add a basic light to illuminate the balls
+      const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+      scene.add(ambientLight);
+      const pointLight = new THREE.PointLight(0xffffff, 1);
+      pointLight.position.set(100, 100, 100);
+      scene.add(pointLight);
+
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Update each ball's position
+        balls.forEach((ball) => {
+          // Update position
+          ball.mesh.position.add(ball.velocity);
+
+          // Check for collision with the inner wall of the sphere container.
+          const distanceFromCenter = ball.mesh.position.length();
+          if (distanceFromCenter + ballRadius > containerRadius) {
+            // Compute the normal of the collision (direction from center to ball)
+            const normal = ball.mesh.position.clone().normalize();
+            // Reflect velocity: v = v - 2*(v · n)*n
+            const dot = ball.velocity.dot(normal);
+            ball.velocity.sub(normal.multiplyScalar(2 * dot));
+            // Adjust position so it remains inside the container
+            ball.mesh.position.setLength(containerRadius - ballRadius);
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // Handle window resize
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
